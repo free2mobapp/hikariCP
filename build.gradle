@@ -1,0 +1,72 @@
+plugins {
+	id 'java'
+	id 'idea'
+	id 'org.springframework.boot' version '3.1.1'
+	id 'io.spring.dependency-management' version '1.1.0'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'co.uk.ksb'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
+}
+
+sourceSets {
+	testIntegration {
+		java {
+			compileClasspath += main.output + test.output
+			runtimeClasspath += main.output + test.output
+			srcDir file('src/testIntegration/java')
+		}
+		resources.srcDir file('src/testIntegration/resources')
+	}
+}
+
+configurations {
+	testIntegrationImplementation.extendsFrom implementation
+	testIntegrationRuntimeOnly.extendsFrom runtimeOnly
+	testIntegrationCompile.extendsFrom compile
+}
+
+dependencies {
+	// web is required if you want to enable actuator
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	implementation 'org.bitbucket.b_c:jose4j:0.9.3'
+	implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+
+	testIntegrationImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// database connection dependencies
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'com.h2database:h2'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+task testIntegration (type: Test) {
+
+	description = 'Runs integration tests.'
+	group = 'verification'
+	testClassesDirs = sourceSets.testIntegration.output.classesDirs
+	classpath = sourceSets.testIntegration.runtimeClasspath
+
+	useJUnitPlatform()
+}
+
+//Ensure that our unit tests are run before our integration tests
+testIntegration.mustRunAfter test
